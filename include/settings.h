@@ -8,4 +8,7 @@ struct Settings {
     int nnapi_delegate;
     int hexagon_delegate;
     int xnnpack_delegate;
+    bool allow_fp16;
+    //bool profiling;
+    //int number_of_threads;
 };

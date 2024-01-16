@@ -8,28 +8,54 @@
 //#include "tensorflow/lite/delegates/gpu/delegate_options.h"
 #include "tensorflow/lite/delegates/gpu/delegate.h"
 
+#include "settings.h"
+#include "delegates.h"
+
 using namespace tflite;
 
 class TfliteNetRun {
 public:
-    TfliteNetRun():in_index(-1), out_index(-1){};
+    TfliteNetRun():in_index(-1), out_index(-1), modify_delegate(false){};
 
-    int model_init(const char* model_file);
+    int model_init(const char* model_file, Settings s);
 
     template <typename Type> 
     int model_inference(Type *input_vals, int input_size, Type **output_vals, int& output_size);
 
+
     int model_deinit();
 
 private:
+    bool createDelegate(Settings s); 
+
+private:
     std::unique_ptr<Interpreter> interpreter;
-    //ProvidedDelegateList delegate_list_util;
-    //tflite::tools::ToolParams params;
+    DelegateProviders delegate_providers;
+
     int in_index;
     int out_index;
+    bool modify_delegate;
 };
 
-int TfliteNetRun::model_init(const char* model_file) {
+bool TfliteNetRun::createDelegate(Settings s) {
+    auto delegates = delegate_providers.CreateAllDelegates();
+    for (auto& delegate : delegates) {
+        const auto delegate_name = delegate.provider->GetName();
+        if (interpreter->ModifyGraphWithDelegate(std::move(delegate.delegate)) != kTfLiteOk) {
+            std::cout << "Failed to apply " << delegate_name << " delegate." << std::endl;
+            modify_delegate = false;
+        } else {
+            std::cout << "Applied " << delegate_name << " delegate." << std::endl;
+            modify_delegate = true;
+        }
+    }
+
+    return modify_delegate;
+}
+
+int TfliteNetRun::model_init(const char* model_file, Settings s) {
+    delegate_providers.MergeSettingsIntoParams(s);
+    delegate_providers.check();
     // Load model
     static std::unique_ptr<tflite::FlatBufferModel> model =
         tflite::FlatBufferModel::BuildFromFile(model_file);
@@ -48,23 +74,20 @@ int TfliteNetRun::model_init(const char* model_file) {
         return -1;
     }
 
-    //interpreter->SetAllowFp16PrecisionForFp32(true);
-    //interpreter->SetNumThreads(1);
-    TfLiteGpuDelegateOptionsV2 options = TfLiteGpuDelegateOptionsV2Default();
-    options.experimental_flags |= TFLITE_GPU_EXPERIMENTAL_FLAGS_ENABLE_SERIALIZATION;
-    options.is_precision_loss_allowed = true;
-    options.serialization_dir = nullptr;
-    options.model_token = nullptr;
+    if (!createDelegate(s)) {
+        fprintf(stderr, "Error use delegate, fall back to CPU\n");
+    }
 
-    auto* delegate = TfLiteGpuDelegateV2Create(&options);
-    if (interpreter->ModifyGraphWithDelegate(delegate) != kTfLiteOk) return false;
+    if (!modify_delegate) {
+        // Allocate tensor buffers.
+        printf("lihc_test AllocateTensors\n");
+        if(interpreter->AllocateTensors() != kTfLiteOk)
+        {
+            fprintf(stderr, "Error AllocateTensors\n");
+            return -1;
+        }
+    }
 
-    // Allocate tensor buffers.
-    //if(interpreter->AllocateTensors() != kTfLiteOk)
-    //{
-    //    fprintf(stderr, "Error AllocateTensors\n");
-    //    return -1;
-    //}
 
     in_index = interpreter->inputs()[0];
     out_index = interpreter->outputs()[0];

@@ -53,8 +53,11 @@ char* readImg(const std::string& filename, int& file_size) {
 void display_usage() {
   std::cout
       << "\n"
-      << "\t--tflite_model, -m: model_name.tflite\n"
-      << "\t--input image, -i: image_name.raw\n"
+      << "\t--model_file, -m: model_name.tflite\n"
+      << "\t--input_file, -i: image_name.raw\n"
+      << "\t--gpu_delegate, -g: [1|0]\n"
+      << "\t--nnapi_delegate, -n: [1|0]\n"
+      << "\t--allow_fp16, -f: [true|false]\n"
       << "\t--help, -h: Print this help message\n";
 }
 
@@ -62,14 +65,17 @@ void getInputFlag(Settings& s, int argc, char** argv) {
     int c;
     while (true) {
         static struct option long_options[] = {
-            {"tflite_model", required_argument, nullptr, 'm'},
+            {"model_file", required_argument, nullptr, 'm'},
             {"input_file", required_argument, nullptr, 'i'},
+            {"gpu_delegate", optional_argument, nullptr, 'g'},
+            {"nnapi_delegate", optional_argument, nullptr, 'n'},
+            {"allow_fp16", optional_argument, nullptr, 'f'},
             {"help", no_argument, nullptr, 'h'},
             {nullptr, 0, nullptr, 0}
         };
 
         int option_index = 0;
-        c = getopt_long(argc, argv, "m:i:h:", long_options, &option_index);
+        c = getopt_long(argc, argv, "m:i:g:n:h:", long_options, &option_index);
 
         if (c == -1) break;
         
@@ -82,15 +88,25 @@ void getInputFlag(Settings& s, int argc, char** argv) {
                 s.input_file = optarg;
                 printf("lihc_test %s\n", s.input_file);
                 break;
+            case 'g':
+                s.gpu_delegate = strtol(optarg, nullptr, 10);
+                printf("lihc_test useGPU %d\n", s.gpu_delegate);
+                break;
+            case 'n':
+                s.nnapi_delegate = strtol(optarg, nullptr, 10);
+                printf("lihc_test useNNAPI %d\n", s.nnapi_delegate);
+                break;
+            case 'f':
+                s.allow_fp16 = strtol(optarg, nullptr, 10);
+                printf("lihc_test allow fp16 %d\n", s.allow_fp16);
+                break;
             case 'h':
             case '?':
                 display_usage();
                 exit(-1);
             default:
                 exit(-1);
-
         }
-
     }
 }
 
@@ -137,7 +153,7 @@ void initDelegates() {
 int main(int argc, char **argv) {
     Settings s;
     getInputFlag(s, argc, argv);
-    initDelegates();
+    //initDelegates();
 
     TfliteNetRun tfliterun;
 
@@ -149,7 +165,7 @@ int main(int argc, char **argv) {
     char* input = readImg(in_file, input_size);
     float* output;
 
-    tfliterun.model_init(model_file);
+    tfliterun.model_init(model_file, s);
     tfliterun.model_inference<float>(reinterpret_cast<float*>(input), input_size, &output, output_size);
     tfliterun.model_deinit();
 
