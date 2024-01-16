@@ -1,6 +1,11 @@
+
 populate_source_vars("${TFLITE_SOURCE_DIR}/examples/tflite_net_run"
   TFLITE_NET_RUN_SRCS
-  FILTER "$\\.cc$"
+  FILTER "_src\\.cc$"
+)
+file (GLOB SRC_FILES ${TFLITE_SOURCE_DIR}/examples/tflite_net_run/src/*.cc)
+list(APPEND TFLITE_NET_RUN_SRCS
+  ${SRC_FILES}
 )
 list(APPEND TFLITE_NET_RUN_SRCS
   #${TSL_SOURCE_DIR}/tsl/util/stats_calculator.cc
