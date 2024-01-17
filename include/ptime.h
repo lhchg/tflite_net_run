@@ -1,9 +1,10 @@
-#ifndef __PTIME_H__
-#define __PTIME_H__
+#pragma once
 
 #include <chrono>
 #include <iostream>
 #include <string.h>
+
+#include "log.h"
 
 class ptime
 {
@@ -27,11 +28,8 @@ public:
     }
     ~ptime()
     {
-        std::cout<<"elasp time(ms):"<<std::chrono::duration_cast<milli>(clock_t::now() - m_beg).count()<<
-                 ",   test func:"<<m_func_name<<"\n";
+        LOGD("elasp time(ms):%lld,   test func:%s\n", std::chrono::duration_cast<milli>(clock_t::now() - m_beg).count(), m_func_name.c_str());
     }
 
 };
 
-
-#endif //__PTIME_H__

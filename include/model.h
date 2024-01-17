@@ -14,6 +14,7 @@
 #include "settings.h"
 #include "delegates.h"
 #include "ptime.h"
+#include "log.h"
 
 using namespace tflite;
 
@@ -46,7 +47,7 @@ template <typename Type>
 int TfliteNetRun::model_inference(Type *input_vals, int input_size, Type **output_vals, int& output_size) {
 
     size_t num_input_elements = interpreter->tensor(in_index)->bytes;
-    printf("num_input_elements =%zu\n", num_input_elements);
+    LOGE("num_input_elements =%zu\n", num_input_elements);
     memcpy(interpreter->typed_tensor<Type>(in_index), input_vals, num_input_elements);
 
     {
@@ -54,7 +55,7 @@ int TfliteNetRun::model_inference(Type *input_vals, int input_size, Type **outpu
         // Run inference
         if(interpreter->Invoke() != kTfLiteOk)
         {
-            fprintf(stderr, "Error Invoke\n");
+            LOGE("Error Invoke\n");
             return -1;
         }
     }
@@ -63,15 +64,10 @@ int TfliteNetRun::model_inference(Type *input_vals, int input_size, Type **outpu
     // Read output buffers
     Type* output = interpreter->typed_tensor<Type>(out_index);
     size_t num_output_elements = interpreter->tensor(out_index)->bytes;
-    printf("num_output_elements = %zu\n", num_output_elements);
+    LOGE("num_output_elements = %zu\n", num_output_elements);
     *output_vals = (Type*)malloc(num_output_elements);
     memcpy(*output_vals, output, num_output_elements);
     output_size = num_output_elements;
-    if (*output_vals == nullptr) {
-        printf("output_vals is nullptr \n");
-    } else {
-        printf("output_vals is not nullptr \n");
-    }
 
     return 0;
 }
