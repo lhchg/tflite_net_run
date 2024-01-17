@@ -1,4 +1,4 @@
-#include "../include/model.h"
+#include "model.h"
 
 bool TfliteNetRun::createDelegate(Settings s) {
     auto delegates = delegate_providers.CreateAllDelegates();
@@ -19,34 +19,37 @@ bool TfliteNetRun::createDelegate(Settings s) {
 int TfliteNetRun::model_init(const char* model_file, Settings s) {
     delegate_providers.MergeSettingsIntoParams(s);
     delegate_providers.check();
-    // Load model
-    static std::unique_ptr<tflite::FlatBufferModel> model =
-        tflite::FlatBufferModel::BuildFromFile(model_file);
-    if(model == nullptr)
     {
-        LOGE("Error open model\n");
-        return -1;
-    }
-    static tflite::ops::builtin::BuiltinOpResolver resolver;
-    // Build the interpreter
-    static InterpreterBuilder builder(*model, resolver);
-    builder(&interpreter);
-    if(interpreter == nullptr)
-    {
-        LOGE("Error get interpreter\n");
-        return -1;
-    }
-
-    if (!createDelegate(s)) {
-        LOGE("Error modifyed delegate, fall back to CPU\n");
-    }
-
-    if (!modify_delegate) {
-        // Allocate tensor buffers.
-        if(interpreter->AllocateTensors() != kTfLiteOk)
+        ptime p("model init");
+        // Load model
+        static std::unique_ptr<tflite::FlatBufferModel> model =
+            tflite::FlatBufferModel::BuildFromFile(model_file);
+        if(model == nullptr)
         {
-            LOGE("Error AllocateTensors\n");
+            LOGE("Error open model\n");
             return -1;
+        }
+        static tflite::ops::builtin::BuiltinOpResolver resolver;
+        // Build the interpreter
+        static InterpreterBuilder builder(*model, resolver);
+        builder(&interpreter);
+        if(interpreter == nullptr)
+        {
+            LOGE("Error get interpreter\n");
+            return -1;
+        }
+
+        if (!createDelegate(s)) {
+            LOGE("Error modifyed delegate, fall back to CPU\n");
+        }
+
+        if (!modify_delegate) {
+            // Allocate tensor buffers.
+            if(interpreter->AllocateTensors() != kTfLiteOk)
+            {
+                LOGE("Error AllocateTensors\n");
+                return -1;
+            }
         }
     }
 
@@ -58,6 +61,7 @@ int TfliteNetRun::model_init(const char* model_file, Settings s) {
 }
 
 int TfliteNetRun::model_deinit() {
+    ptime p("model deinit");
     return 0;
 }
 

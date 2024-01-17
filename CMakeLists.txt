@@ -8,7 +8,6 @@ list(APPEND TFLITE_NET_RUN_SRCS
   ${SRC_FILES}
 )
 list(APPEND TFLITE_NET_RUN_SRCS
-  #${TSL_SOURCE_DIR}/tsl/util/stats_calculator.cc
   ${TF_SOURCE_DIR}/core/util/stats_calculator.cc
   ${TFLITE_SOURCE_DIR}/profiling/memory_info.cc
   ${TFLITE_SOURCE_DIR}/profiling/profile_summarizer.cc
@@ -53,18 +52,6 @@ add_executable(tflite_net_run
   ${TFLITE_NET_RUN_SRCS}
 )
 
-#if(TFLITE_ENABLE_TFLITE_NET_RUN)
-#  set_target_properties(tflite_net_run PROPERTIES EXCLUDE_FROM_ALL FALSE)
-#  if(TFLITE_ENABLE_INSTALL)
-#    install(TARGETS tflite_net_run)
-#  endif()  # TFLITE_ENABLE_INSTALL
-#else()
-#  set_target_properties(tflite_net_run PROPERTIES EXCLUDE_FROM_ALL TRUE)
-#endif()  # TFLITE_ENABLE_LABEL_IMAGE
-#target_compile_options(tflite_net_run
-#  PRIVATE
-#    ${TFLITE_TFLITE_NET_RUN_CC_OPTIONS}
-#)
 target_link_libraries(tflite_net_run
   tensorflow-lite
 )

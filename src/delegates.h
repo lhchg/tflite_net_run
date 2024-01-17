@@ -2,7 +2,8 @@
 #include "tensorflow/lite/tools/command_line_flags.h"
 #include "tensorflow/lite/tools/delegates/delegate_provider.h"
 #include "tensorflow/lite/tools/tool_params.h"
-#include "settings.h"
+
+#include "../include/settings.h"
 
 using namespace tflite::tools;
 using namespace tflite;

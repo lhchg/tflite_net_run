@@ -11,10 +11,9 @@
 #include "tensorflow/lite/delegates/gpu/delegate.h"
 #include "tensorflow/lite/profiling/profiler.h"
 
-#include "settings.h"
+#include "../include/settings.h"
 #include "delegates.h"
-#include "ptime.h"
-#include "log.h"
+#include "../utils/ptime.h"
 
 using namespace tflite;
 

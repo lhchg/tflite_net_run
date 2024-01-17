@@ -4,10 +4,10 @@
 
 #include <getopt.h>
 
-#include "include/model.h"
-#include "include/delegates.h"
+#include "src/model.h"
+#include "src/delegates.h"
 #include "include/settings.h"
-#include "include/log.h"
+#include "utils/log.h"
 
 int saveOutput(const char* output, int output_size, const char* output_file) {
     std::ofstream outfile(output_file, std::ios::binary);
@@ -53,13 +53,19 @@ char* readImg(const std::string& filename, int& file_size) {
 
 void display_usage() {
   std::cout
-      << "\n"
-      << "\t--model_file, -m: model_name.tflite\n"
-      << "\t--input_file, -i: image_name.raw\n"
-      << "\t--output_file, -i: image_name.raw\n"
-      << "\t--gpu_delegate, -g: [1|0]\n"
-      << "\t--nnapi_delegate, -n: [1|0]\n"
-      << "\t--allow_fp16, -f: [true|false]\n"
+      << "\t--model_file, -m: file path of model\n"
+      << "\t--input_file, -i: file path of input file\n"
+      << "\t--output_file, -i: file path of output file\n"
+      << "\t--gpu_delegate, -g: use gpu delegate or not [1|0]\n"
+      << "\t--nnapi_delegate, -n: use nnapi delegate or not [1|0]\n"
+      << "\t--allow_fp16, -f: Whether to allow the GPU/NNAPI delegate to carry out computation \n"
+      << "\t                  with some precision loss (i.e. processing in FP16) or not. If allowed, \n"
+      << "\t                  the performance will increase (default=true) [1|0]\n"
+      << "\t--gpu_enable_quant, -q: Whether to allow the GPU delegate to run a 8-bit quantized \n"
+      << "\t                        model or not (default=false) [1|0]\n"
+      << "\t--gpu_sustained_speed, s: Whether to prefer maximizing the throughput. This mode will help when the\n"
+      << "\t                          same delegate will be used repeatedly on multiple inputs. This is supported\n"
+      << "\t                          on non-iOS platforms. (default=true) [1|0]\n"
       << "\t--help, -h: Print this help message\n";
 }
 
@@ -73,6 +79,8 @@ void getInputFlag(Settings& s, int argc, char** argv) {
             {"gpu_delegate", optional_argument, nullptr, 'g'},
             {"nnapi_delegate", optional_argument, nullptr, 'n'},
             {"allow_fp16", optional_argument, nullptr, 'f'},
+            {"gpu_enable_quant", optional_argument, nullptr, 'q'},
+            {"gpu_sustained_speed", optional_argument, nullptr, 's'},
             {"help", no_argument, nullptr, 'h'},
             {nullptr, 0, nullptr, 0}
         };
@@ -106,6 +114,14 @@ void getInputFlag(Settings& s, int argc, char** argv) {
             case 'f':
                 s.allow_fp16 = strtol(optarg, nullptr, 10);
                 LOGD("allow fp16 %d\n", s.allow_fp16);
+                break;
+            case 'q':
+                s.gpu_enable_quant = strtol(optarg, nullptr, 10);
+                LOGD("gpu_enable_quant %d\n", s.gpu_enable_quant);
+                break;
+            case 's':
+                s.gpu_sustained_speed = strtol(optarg, nullptr, 10);
+                LOGD("gpu_sustained_speed %d\n", s.gpu_sustained_speed);
                 break;
             case 'h':
             case '?':
