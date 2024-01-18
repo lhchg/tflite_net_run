@@ -19,35 +19,62 @@ using namespace tflite;
 
 class TfliteNetRun {
 public:
-    TfliteNetRun():in_index(-1), out_index(-1), modify_delegate(false){};
+    TfliteNetRun(): modify_delegate(false){};
 
-    int model_init(const char* model_file, Settings s);
+    int model_init(const char* model_file);
 
     template <typename Type> 
-    int model_inference(Type *input_vals, int input_size, Type **output_vals, int& output_size);
+    int model_inference(Type **output_vals, int& output_size);
 
     int model_deinit();
 
 private:
-    bool createDelegate(Settings s); 
+    bool createDelegate(); 
     void PrintProfilingInfo(const profiling::ProfileEvent* e,uint32_t subgraph_index, uint32_t op_index,TfLiteRegistration registration);
 
 private:
     std::unique_ptr<Interpreter> interpreter;
     DelegateProviders delegate_providers;
 
-    int in_index;
+    std::vector<int> in_index;
+    //const std::vector<int> out_index;
     int out_index;
     bool modify_delegate;
 };
 
 
 template <typename Type>
-int TfliteNetRun::model_inference(Type *input_vals, int input_size, Type **output_vals, int& output_size) {
+int TfliteNetRun::model_inference(Type **output_vals, int& output_size) {
+    Settings& s = *Settings::get();
 
-    size_t num_input_elements = interpreter->tensor(in_index)->bytes;
-    LOGE("num_input_elements =%zu\n", num_input_elements);
-    memcpy(interpreter->typed_tensor<Type>(in_index), input_vals, num_input_elements);
+    for (auto index : in_index) {
+        size_t num_input_elements = interpreter->tensor(index)->bytes;
+
+        auto input = s.input_file.begin();
+        for (; input != s.input_file.end(); input++) {
+            if (input->get()->getFileSize() == num_input_elements) {
+                memcpy(interpreter->typed_tensor<Type>(index), input->get()->getAddr(), num_input_elements);
+                continue;
+            }
+        }
+        if (input == s.input_file.end()) {
+            LOGE("input file is wrong, expected file size is");
+            for (auto index : in_index) {
+                size_t num_input_elements = interpreter->tensor(index)->bytes;
+                LOGE(" %lu ,", num_input_elements);
+            }
+            LOGE("\n");
+
+            LOGE("current file size is");
+            for (const auto& inputPtr : s.input_file) {
+                size_t inputSize = inputPtr->getFileSize();
+                LOGE(" %lu ,", inputSize);
+            }
+            LOGE("\n");
+
+            return -1;
+        }
+    }
 
     {
         ptime p("invoke");

@@ -16,7 +16,7 @@ public:
         return Flags::Parse(argc, argv, flags_);
     }
 
-    void MergeSettingsIntoParams(const Settings& s);
+    void MergeSettingsIntoParams();
 
     std::vector<ProvidedDelegateList::ProvidedDelegate> CreateAllDelegates() const {
         return delegate_list_util_.CreateAllRankedDelegates();

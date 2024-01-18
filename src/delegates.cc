@@ -12,7 +12,8 @@ DelegateProviders::DelegateProviders() : delegate_list_util_(&params_){
     delegate_list_util_.RemoveCmdlineFlag(flags_, "help");
 }
 
-void DelegateProviders::MergeSettingsIntoParams(const Settings& s) {
+void DelegateProviders::MergeSettingsIntoParams() {
+    Settings& s = *Settings::get();
     if (s.gpu_delegate) {
         if (!params_.HasParam("use_gpu")) {
             LOGE("GPU delegate execution provider isn't linked or GPU delegate isn't supported on the platform\n");
@@ -87,6 +88,5 @@ void DelegateProviders::check() {
         LOGD("hexagon delegate is supported on the platform\n");
     } else {
         LOGD("hexagon delegate is not supported on the platform\n");
-        
     }
 }

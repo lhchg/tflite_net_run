@@ -1,11 +1,68 @@
 #pragma once
 
-using namespace std;
+#include <vector>
+#include <unordered_map>
 
-struct Settings {
+#include "../utils/singleton.h"
+
+class RawImage {
+public:
+    RawImage(): imageName(""), addr(nullptr), fileSize(0){};
+
+    void allocBuffer(size_t size) {
+        printf("lihc_test allocBuffer size is %lu\n", size);
+        addr = new char[size];
+        fileSize = size;
+    }
+
+    const std::string getImageName() {
+        return imageName;
+    }
+
+    void setImageName(const std::string name) {
+        imageName = name;
+    }
+
+    size_t getFileSize() {
+        return fileSize;
+    }
+
+    char* getAddr() {
+        return addr;
+    }
+
+    ~RawImage(){
+        printf("lihc_test ~RawImage\n");
+        if (addr != nullptr) {
+            delete[] addr;
+        } else {
+            printf("lihc_test addr is nullptr\n");
+        }
+        
+
+        addr = nullptr;
+    };
+
+private:
+    std::string imageName;
+    char* addr;
+    size_t fileSize;
+};
+
+using RawImagePtr = std::unique_ptr<RawImage>;
+using RawImageList = std::vector<RawImagePtr>; 
+
+class Settings : public Singleton<Settings> {
+public:
+    ~Settings() {
+        printf("lihc_test ~Settings\n");
+    }
+public:
     const char* model_name;
-    const char* input_file;
+
+    RawImageList input_file;
     const char* output_file;
+
     int gpu_delegate = false;
     int nnapi_delegate = false;
     int hexagon_delegate = false;

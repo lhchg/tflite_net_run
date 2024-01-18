@@ -25,7 +25,7 @@ int saveOutput(const char* output, int output_size, const char* output_file) {
 }
 
 
-char* readImg(const std::string& filename, int& file_size) {
+char* readImg(const std::string& filename, size_t& file_size) {
     std::ifstream file(filename, std::ios::binary);
 
     if (file.is_open()) {
@@ -40,21 +40,72 @@ char* readImg(const std::string& filename, int& file_size) {
         file_size = fileSize;
 
         file.close();
-        LOGD("fileSize= %d\n", file_size);
+        LOGD("fileSize= %lu\n", file_size);
 
         return buffer;
     } else {
         LOGE("input file (%s) open failed.\n", filename.c_str());
         file_size = 0;
-        return {};
+        return nullptr;
     }
-    return {};
+    return nullptr;
+}
+
+uint64_t getFileSize(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (file.is_open()) {
+        file.seekg(0, std::ios::end);
+        std::streampos fileSize = file.tellg();
+        file.seekg(0, std::ios::beg);
+
+
+        file.close();
+        LOGD("%s fileSize= %lu\n", filename.c_str(), (size_t)fileSize);
+
+        return fileSize;
+    } else {
+        LOGE("input file (%s) open failed.\n", filename.c_str());
+        return 0;
+    }
+
+    return 0;
+}
+
+void fillImage(const std::string fileName) {
+    Settings& s = *Settings::get();
+
+    size_t size = 0;
+    char* buffer = readImg(fileName, size);
+
+    std::unique_ptr<RawImage> rawImagePtr(new RawImage());    
+    rawImagePtr->setImageName(fileName);
+    rawImagePtr->allocBuffer(size);
+    if (buffer != nullptr) {
+        memcpy(rawImagePtr->getAddr(), buffer, size * sizeof(char));
+    } else {
+        exit(-1);
+    }
+    s.input_file.push_back(std::move(rawImagePtr));
+
+    delete[] buffer;
+}
+
+void parseFileNames(const std::string& fileNames) {
+
+    std::istringstream iss(fileNames);
+    std::string fileName;
+
+    while (std::getline(iss, fileName, ',')) {
+        fillImage(fileName);
+    }
 }
 
 void display_usage() {
   std::cout
       << "\t--model_file, -m: file path of model\n"
-      << "\t--input_file, -i: file path of input file\n"
+      << "\t--input_file, -i: file path of input file, \n"
+      << "\t                  if more than one file, use ',' to separate\n"
+      << "\t                  e.g. input1.raw,input2.raw\n"
       << "\t--output_file, -i: file path of output file\n"
       << "\t--gpu_delegate, -g: use gpu delegate or not [1|0]\n"
       << "\t--nnapi_delegate, -n: use nnapi delegate or not [1|0]\n"
@@ -69,7 +120,9 @@ void display_usage() {
       << "\t--help, -h: Print this help message\n";
 }
 
-void getInputFlag(Settings& s, int argc, char** argv) {
+void getInputFlag(int argc, char** argv) {
+    Settings& s = *Settings::get();
+    const char* inputFiles = nullptr;
     int c;
     while (true) {
         static struct option long_options[] = {
@@ -96,8 +149,9 @@ void getInputFlag(Settings& s, int argc, char** argv) {
                 LOGD("model name is %s\n", s.model_name);
                 break;
             case 'i':
-                s.input_file = optarg;
-                LOGD("input file is %s\n", s.input_file);
+                inputFiles = optarg;
+                parseFileNames(inputFiles);
+                LOGD("input file number is %lu\n", s.input_file.size());
                 break;
             case 'o':
                 s.output_file = optarg;
@@ -127,7 +181,6 @@ void getInputFlag(Settings& s, int argc, char** argv) {
             case '?':
                 display_usage();
                 exit(-1);
-                break;
             default:
                 exit(-1);
         }
@@ -135,21 +188,26 @@ void getInputFlag(Settings& s, int argc, char** argv) {
 }
 
 int main(int argc, char **argv) {
-    Settings s;
-    getInputFlag(s, argc, argv);
+    Settings& s = *Settings::get();
+    getInputFlag(argc, argv);
 
     TfliteNetRun tfliterun;
 
     const char *model_file = s.model_name;
-    const char *in_file = s.input_file;
 
-    int input_size;
     int output_size;
-    char* input = readImg(in_file, input_size);
-    float* output;
 
-    tfliterun.model_init(model_file, s);
-    tfliterun.model_inference<float>(reinterpret_cast<float*>(input), input_size, &output, output_size);
+    //for (auto input : s.input_file) {
+    //    size_t inputSize = input.getFileSize();
+    //}
+
+    float* output = nullptr;
+    
+    printf("lihc_test s.model_name= %s\n", s.model_name);
+
+    tfliterun.model_init(model_file);
+    //tfliterun.model_inference<float>(reinterpret_cast<float*>(input), input_size, &output, output_size);
+    tfliterun.model_inference<float>(&output, output_size);
     tfliterun.model_deinit();
 
     if (output != nullptr) {
@@ -158,8 +216,12 @@ int main(int argc, char **argv) {
         LOGE("output is nullptr!\n");
     }
 
-    delete [] output;
-    delete [] input;
+    Settings::release();
+
+    if (output != nullptr) {
+        delete [] output;
+        output = nullptr;
+    }
 
     return 0;
 }

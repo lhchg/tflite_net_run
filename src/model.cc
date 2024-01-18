@@ -1,6 +1,7 @@
 #include "model.h"
 
-bool TfliteNetRun::createDelegate(Settings s) {
+bool TfliteNetRun::createDelegate() {
+    Settings& s = *Settings::get();
     auto delegates = delegate_providers.CreateAllDelegates();
     for (auto& delegate : delegates) {
         const auto delegate_name = delegate.provider->GetName();
@@ -16,8 +17,8 @@ bool TfliteNetRun::createDelegate(Settings s) {
     return modify_delegate;
 }
 
-int TfliteNetRun::model_init(const char* model_file, Settings s) {
-    delegate_providers.MergeSettingsIntoParams(s);
+int TfliteNetRun::model_init(const char* model_file) {
+    delegate_providers.MergeSettingsIntoParams();
     delegate_providers.check();
     {
         ptime p("model init");
@@ -39,7 +40,7 @@ int TfliteNetRun::model_init(const char* model_file, Settings s) {
             return -1;
         }
 
-        if (!createDelegate(s)) {
+        if (!createDelegate()) {
             LOGE("Error modifyed delegate, fall back to CPU\n");
         }
 
@@ -53,9 +54,11 @@ int TfliteNetRun::model_init(const char* model_file, Settings s) {
         }
     }
 
-    in_index = interpreter->inputs()[0];
+    in_index = interpreter->inputs();
     out_index = interpreter->outputs()[0];
     //LOGD("in index:%d,out index:%d\n",in_index,out_index);
+    LOGD("number of input is %lu\n", interpreter->inputs().size());
+    //LOGD("number of output is %lu\n", interpreter->outputs().size());
 
     return 0;
 }
