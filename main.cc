@@ -202,8 +202,6 @@ int main(int argc, char **argv) {
 
     std::string model_file = s.model_name;
 
-    printf("lihc_test s.model_name= %s\n", s.model_name.c_str());
-
     tfliterun.model_init(model_file.c_str());
     tfliterun.model_inference<float>();
     tfliterun.model_deinit();
