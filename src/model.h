@@ -58,19 +58,21 @@ int TfliteNetRun::model_inference() {
             }
         }
         if (input == s.input_file.end()) {
-            LOGE("input file is wrong, expected file size is");
+            std::stringstream ss_input;
+            ss_input << "input file is wrong, expected file size is";
             for (auto index : in_index) {
                 size_t num_input_elements = interpreter->tensor(index)->bytes;
-                LOGE(" %lu ,", num_input_elements);
+                ss_input << num_input_elements << ",";
             }
-            LOGE("\n");
+            LOGE("%s\n", ss_input.str().c_str());
 
-            LOGE("current file size is");
+            std::stringstream ss_current;
+            ss_current << "current file size is";
             for (const auto& inputPtr : s.input_file) {
                 size_t inputSize = inputPtr->getFileSize();
-                LOGE(" %lu ,", inputSize);
+                ss_current << inputSize << ",";
             }
-            LOGE("\n");
+            LOGE("%s\n", ss_current.str().c_str());
 
             return -1;
         }
