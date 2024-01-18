@@ -24,7 +24,7 @@ public:
     int model_init(const char* model_file);
 
     template <typename Type> 
-    int model_inference(Type **output_vals, int& output_size);
+    int model_inference();
 
     int model_deinit();
 
@@ -37,16 +37,16 @@ private:
     DelegateProviders delegate_providers;
 
     std::vector<int> in_index;
-    //const std::vector<int> out_index;
-    int out_index;
+    std::vector<int> out_index;
     bool modify_delegate;
 };
 
 
 template <typename Type>
-int TfliteNetRun::model_inference(Type **output_vals, int& output_size) {
+int TfliteNetRun::model_inference() {
     Settings& s = *Settings::get();
 
+    // fill input buffer
     for (auto index : in_index) {
         size_t num_input_elements = interpreter->tensor(index)->bytes;
 
@@ -86,14 +86,17 @@ int TfliteNetRun::model_inference(Type **output_vals, int& output_size) {
         }
     }
 
-
     // Read output buffers
-    Type* output = interpreter->typed_tensor<Type>(out_index);
-    size_t num_output_elements = interpreter->tensor(out_index)->bytes;
-    LOGE("num_output_elements = %zu\n", num_output_elements);
-    *output_vals = (Type*)malloc(num_output_elements);
-    memcpy(*output_vals, output, num_output_elements);
-    output_size = num_output_elements;
+    for (auto index : out_index) {
+        size_t num_output_elements = interpreter->tensor(index)->bytes;
+        std::unique_ptr<RawImage> rawImagePtr(new RawImage);
+        rawImagePtr->allocBuffer(num_output_elements);
+        
+        Type* output = interpreter->typed_tensor<Type>(index);
+        
+        memcpy(rawImagePtr->getAddr(), output, num_output_elements);
+        s.output_file.push_back(std::move(rawImagePtr));
+    }
 
     return 0;
 }

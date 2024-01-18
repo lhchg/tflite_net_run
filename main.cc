@@ -9,16 +9,23 @@
 #include "include/settings.h"
 #include "utils/log.h"
 
-int saveOutput(const char* output, int output_size, const char* output_file) {
-    std::ofstream outfile(output_file, std::ios::binary);
+int saveOutput() {
+    Settings& s = *Settings::get();
 
-    if (outfile.is_open()) {
-        outfile.write(output, output_size);
-        outfile.close();
-        LOGD("output write success\n");
-    } else {
-        LOGD("cannot write output\n");
-        return -1;
+    int n = 1;
+    for (const auto& output : s.output_file) {
+        std::string output_name = s.output_path + "/" + s.outputName + std::to_string(n); 
+        std::ofstream outfile(output_name, std::ios::binary);
+        
+        if (outfile.is_open()) {
+            outfile.write(output->getAddr(), output->getFileSize());
+            outfile.close();
+            LOGD("output write success\n");
+        } else {
+            LOGD("cannot write output\n");
+            return -1;
+        }
+        ++n;
     }
 
     return 0;
@@ -128,7 +135,7 @@ void getInputFlag(int argc, char** argv) {
         static struct option long_options[] = {
             {"model_file", required_argument, nullptr, 'm'},
             {"input_file", required_argument, nullptr, 'i'},
-            {"output_file", required_argument, nullptr, 'o'},
+            {"output_path", required_argument, nullptr, 'o'},
             {"gpu_delegate", optional_argument, nullptr, 'g'},
             {"nnapi_delegate", optional_argument, nullptr, 'n'},
             {"allow_fp16", optional_argument, nullptr, 'f'},
@@ -146,7 +153,7 @@ void getInputFlag(int argc, char** argv) {
         switch (c) {
             case 'm':
                 s.model_name = optarg;
-                LOGD("model name is %s\n", s.model_name);
+                LOGD("model name is %s\n", s.model_name.c_str());
                 break;
             case 'i':
                 inputFiles = optarg;
@@ -154,8 +161,8 @@ void getInputFlag(int argc, char** argv) {
                 LOGD("input file number is %lu\n", s.input_file.size());
                 break;
             case 'o':
-                s.output_file = optarg;
-                LOGD("output file is %s\n", s.output_file);
+                s.output_path = optarg;
+                LOGD("output file is %s\n", s.output_path.c_str());
                 break;
             case 'g':
                 s.gpu_delegate = strtol(optarg, nullptr, 10);
@@ -193,35 +200,17 @@ int main(int argc, char **argv) {
 
     TfliteNetRun tfliterun;
 
-    const char *model_file = s.model_name;
+    std::string model_file = s.model_name;
 
-    int output_size;
+    printf("lihc_test s.model_name= %s\n", s.model_name.c_str());
 
-    //for (auto input : s.input_file) {
-    //    size_t inputSize = input.getFileSize();
-    //}
-
-    float* output = nullptr;
-    
-    printf("lihc_test s.model_name= %s\n", s.model_name);
-
-    tfliterun.model_init(model_file);
-    //tfliterun.model_inference<float>(reinterpret_cast<float*>(input), input_size, &output, output_size);
-    tfliterun.model_inference<float>(&output, output_size);
+    tfliterun.model_init(model_file.c_str());
+    tfliterun.model_inference<float>();
     tfliterun.model_deinit();
 
-    if (output != nullptr) {
-        saveOutput(reinterpret_cast<char*>(output), output_size, s.output_file);
-    } else {
-        LOGE("output is nullptr!\n");
-    }
+    saveOutput();
 
     Settings::release();
-
-    if (output != nullptr) {
-        delete [] output;
-        output = nullptr;
-    }
 
     return 0;
 }

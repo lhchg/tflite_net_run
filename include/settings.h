@@ -38,7 +38,6 @@ public:
         } else {
             printf("lihc_test addr is nullptr\n");
         }
-        
 
         addr = nullptr;
     };
@@ -54,14 +53,19 @@ using RawImageList = std::vector<RawImagePtr>;
 
 class Settings : public Singleton<Settings> {
 public:
+    Settings() = default;
     ~Settings() {
         printf("lihc_test ~Settings\n");
     }
 public:
-    const char* model_name;
+    std::string model_name;
 
     RawImageList input_file;
-    const char* output_file;
+    RawImageList output_file;
+
+    std::string output_path = "output";
+    std::string outputName = "output";
+
 
     int gpu_delegate = false;
     int nnapi_delegate = false;
@@ -72,7 +76,7 @@ public:
     bool gpu_sustained_speed = true;
     bool nnapi_burst_mode = true;
     bool nnapi_allow_dynamic = false;
-    const char* nnapi_execution_priority = "high";
+    std::string nnapi_execution_priority = "high";
     bool profiling = false;
     int number_of_threads = 1;
 };

@@ -55,10 +55,10 @@ int TfliteNetRun::model_init(const char* model_file) {
     }
 
     in_index = interpreter->inputs();
-    out_index = interpreter->outputs()[0];
-    //LOGD("in index:%d,out index:%d\n",in_index,out_index);
+    out_index = interpreter->outputs();
+
     LOGD("number of input is %lu\n", interpreter->inputs().size());
-    //LOGD("number of output is %lu\n", interpreter->outputs().size());
+    LOGD("number of output is %lu\n", interpreter->outputs().size());
 
     return 0;
 }
