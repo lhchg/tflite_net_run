@@ -65,9 +65,9 @@ public:
     int nnapi_delegate = false;
     int hexagon_delegate = false;
     int xnnpack_delegate = false;
-    bool allow_fp16 = true;
+    bool allow_fp16 = false;
     bool gpu_enable_quant = false;
-    bool gpu_sustained_speed = true;
+    bool gpu_sustained_speed = false;
     bool nnapi_burst_mode = true;
     bool nnapi_allow_dynamic = false;
     std::string nnapi_execution_priority = "high";

@@ -54,6 +54,9 @@ int TfliteNetRun::model_init(const char* model_file) {
         }
     }
 
+    //interpreter->SetAllowFp16PrecisionForFp32(true);
+    //interpreter->SetNumThreads(1);
+
     in_index = interpreter->inputs();
     out_index = interpreter->outputs();
 

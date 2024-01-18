@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdio>
 #include <iomanip>
+#include <fstream>
 
 #include "tensorflow/lite/interpreter.h"
 #include "tensorflow/lite/kernels/register.h"
@@ -53,13 +54,13 @@ int TfliteNetRun::model_inference() {
         auto input = s.input_file.begin();
         for (; input != s.input_file.end(); input++) {
             if (input->get()->getFileSize() == num_input_elements) {
-                memcpy(interpreter->typed_tensor<Type>(index), input->get()->getAddr(), num_input_elements);
-                continue;
+                memcpy(reinterpret_cast<char*>(interpreter->typed_tensor<Type>(index)), input->get()->getAddr(), num_input_elements);
+                break;
             }
         }
         if (input == s.input_file.end()) {
             std::stringstream ss_input;
-            ss_input << "input file is wrong, expected file size is";
+            ss_input << "input file is wrong, expected file size is ";
             for (auto index : in_index) {
                 size_t num_input_elements = interpreter->tensor(index)->bytes;
                 ss_input << num_input_elements << ",";
@@ -67,7 +68,7 @@ int TfliteNetRun::model_inference() {
             LOGE("%s\n", ss_input.str().c_str());
 
             std::stringstream ss_current;
-            ss_current << "current file size is";
+            ss_current << "current file size is ";
             for (const auto& inputPtr : s.input_file) {
                 size_t inputSize = inputPtr->getFileSize();
                 ss_current << inputSize << ",";
@@ -77,7 +78,16 @@ int TfliteNetRun::model_inference() {
             return -1;
         }
     }
-
+#if 0
+    for (auto index : in_index) {
+        std::ofstream file("/data/lihc/test/in.raw", std::ios::binary);
+        if (file.is_open()) {
+            file.write(reinterpret_cast<const char*>(interpreter->typed_tensor<float>(index)), interpreter->tensor(index)->bytes);
+        }
+        file.close();
+    }
+#endif
+    
     {
         ptime p("invoke");
         // Run inference
@@ -96,7 +106,7 @@ int TfliteNetRun::model_inference() {
         
         Type* output = interpreter->typed_tensor<Type>(index);
         
-        memcpy(rawImagePtr->getAddr(), output, num_output_elements);
+        memcpy(rawImagePtr->getAddr(), reinterpret_cast<char*>(output), num_output_elements);
         s.output_file.push_back(std::move(rawImagePtr));
     }
 

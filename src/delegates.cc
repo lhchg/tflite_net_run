@@ -36,7 +36,9 @@ void DelegateProviders::MergeSettingsIntoParams() {
             LOGE("NNAPI delegate execution provider isn't linked or NNAPI delegate isn't supported on the platform!\n");
         } else {
             params_.Set<bool>("use_nnapi", true);
+            params_.Set<std::string>("nnapi_execution_preference", "fast_single_answer");
             params_.Set<bool>("nnapi_allow_fp16", s.allow_fp16);
+            params_.Set<bool>("disable_nnapi_cpu", true);
             params_.Set<bool>("nnapi_use_burst_mode", s.nnapi_burst_mode);
             params_.Set<bool>("nnapi_allow_dynamic_dimensions", s.nnapi_allow_dynamic);
             params_.Set<std::string>("nnapi_execution_priority", s.nnapi_execution_priority);

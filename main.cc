@@ -14,7 +14,7 @@ int saveOutput() {
 
     int n = 1;
     for (const auto& output : s.output_file) {
-        std::string output_name = s.output_path + "/" + s.outputName + std::to_string(n); 
+        std::string output_name = s.output_path + "/" + s.outputName + std::to_string(n) + ".raw"; 
         std::ofstream outfile(output_name, std::ios::binary);
         
         if (outfile.is_open()) {
@@ -113,7 +113,7 @@ void display_usage() {
       << "\t--input_file, -i: file path of input file, \n"
       << "\t                  if more than one file, use ',' to separate\n"
       << "\t                  e.g. input1.raw,input2.raw\n"
-      << "\t--output_file, -i: file path of output file\n"
+      << "\t--output_file, -o: file path of output file\n"
       << "\t--gpu_delegate, -g: use gpu delegate or not [1|0]\n"
       << "\t--nnapi_delegate, -n: use nnapi delegate or not [1|0]\n"
       << "\t--allow_fp16, -f: Whether to allow the GPU/NNAPI delegate to carry out computation \n"
@@ -135,7 +135,7 @@ void getInputFlag(int argc, char** argv) {
         static struct option long_options[] = {
             {"model_file", required_argument, nullptr, 'm'},
             {"input_file", required_argument, nullptr, 'i'},
-            {"output_path", required_argument, nullptr, 'o'},
+            {"output_path", optional_argument, nullptr, 'o'},
             {"gpu_delegate", optional_argument, nullptr, 'g'},
             {"nnapi_delegate", optional_argument, nullptr, 'n'},
             {"allow_fp16", optional_argument, nullptr, 'f'},
@@ -146,7 +146,7 @@ void getInputFlag(int argc, char** argv) {
         };
 
         int option_index = 0;
-        c = getopt_long(argc, argv, "m:i:g:n:h:", long_options, &option_index);
+        c = getopt_long(argc, argv, "m:i:o:g:n:f:q:s:h:", long_options, &option_index);
 
         if (c == -1) break;
         
