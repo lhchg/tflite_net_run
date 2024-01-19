@@ -169,6 +169,10 @@ void getInputFlag(int argc, char** argv) {
 }
 
 int main(int argc, char **argv) {
+    if (argc == 1) {
+        display_usage();
+        return 0;
+    }
     Settings& s = *Settings::get();
     getInputFlag(argc, argv);
 
