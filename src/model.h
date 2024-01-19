@@ -110,7 +110,7 @@ int TfliteNetRun::model_inference() {
     int n = 1;
     for (auto index : out_index) {
         size_t num_output_elements = interpreter->tensor(index)->bytes;
-#if 0
+#if 1
         // Write the output to Settings
         std::unique_ptr<RawImage> rawImagePtr(new RawImage);
         rawImagePtr->allocBuffer(num_output_elements);

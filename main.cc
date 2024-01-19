@@ -9,27 +9,19 @@
 #include "include/settings.h"
 #include "utils/log.h"
 
-#if 0
-int saveOutput() {
+#if 1
+void saveOutput() {
     Settings& s = *Settings::get();
-
     int n = 1;
     for (const auto& output : s.output_file) {
         std::string output_name = s.output_path + "/" + s.outputName + std::to_string(n) + ".raw"; 
-        std::ofstream outfile(output_name, std::ios::binary);
-        
-        if (outfile.is_open()) {
-            outfile.write(output->getAddr(), output->getFileSize());
-            outfile.close();
-            LOGD("output write success\n");
+        if (output->saveImage(output_name)) {
+            LOGD("file saved:%s\n", output_name.c_str());
         } else {
-            LOGD("cannot write output\n");
-            return -1;
+            LOGD("cannot write output:%s\n", output_name.c_str());
         }
         ++n;
     }
-
-    return 0;
 }
 #endif
 
@@ -188,7 +180,7 @@ int main(int argc, char **argv) {
     tfliterun.model_inference<float>();
     tfliterun.model_deinit();
 
-    //saveOutput();
+    saveOutput();
 
     Settings::release();
 

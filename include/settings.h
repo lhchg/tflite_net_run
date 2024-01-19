@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <fstream>
 
 #include "../utils/singleton.h"
 
@@ -28,6 +29,20 @@ public:
 
     char* getAddr() {
         return addr;
+    }
+
+    bool saveImage(std::string fileName) {
+        if (addr != nullptr && fileSize != 0) { 
+            std::ofstream outfile(fileName, std::ios::binary);
+            if (outfile.is_open()) {
+                outfile.write(addr, fileSize);
+                outfile.close();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
     }
 
     ~RawImage(){
