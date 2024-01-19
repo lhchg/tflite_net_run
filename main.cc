@@ -9,6 +9,7 @@
 #include "include/settings.h"
 #include "utils/log.h"
 
+#if 0
 int saveOutput() {
     Settings& s = *Settings::get();
 
@@ -30,6 +31,7 @@ int saveOutput() {
 
     return 0;
 }
+#endif
 
 
 char* readImg(const std::string& filename, size_t& file_size) {
@@ -56,26 +58,6 @@ char* readImg(const std::string& filename, size_t& file_size) {
         return nullptr;
     }
     return nullptr;
-}
-
-uint64_t getFileSize(const std::string& filename) {
-    std::ifstream file(filename, std::ios::binary);
-    if (file.is_open()) {
-        file.seekg(0, std::ios::end);
-        std::streampos fileSize = file.tellg();
-        file.seekg(0, std::ios::beg);
-
-
-        file.close();
-        LOGD("%s fileSize= %lu\n", filename.c_str(), (size_t)fileSize);
-
-        return fileSize;
-    } else {
-        LOGE("input file (%s) open failed.\n", filename.c_str());
-        return 0;
-    }
-
-    return 0;
 }
 
 void fillImage(const std::string fileName) {
@@ -206,7 +188,7 @@ int main(int argc, char **argv) {
     tfliterun.model_inference<float>();
     tfliterun.model_deinit();
 
-    saveOutput();
+    //saveOutput();
 
     Settings::release();
 

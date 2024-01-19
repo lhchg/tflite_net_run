@@ -16,6 +16,8 @@
 #include "delegates.h"
 #include "../utils/ptime.h"
 
+static int DEBUG = 0;
+
 using namespace tflite;
 
 class TfliteNetRun {
@@ -31,7 +33,6 @@ public:
 
 private:
     bool createDelegate(); 
-    void PrintProfilingInfo(const profiling::ProfileEvent* e,uint32_t subgraph_index, uint32_t op_index,TfLiteRegistration registration);
 
 private:
     std::unique_ptr<Interpreter> interpreter;
@@ -48,45 +49,52 @@ int TfliteNetRun::model_inference() {
     Settings& s = *Settings::get();
 
     // fill input buffer
+    std::sort(s.input_file.begin(), s.input_file.end(),
+          [](const RawImagePtr& a, const RawImagePtr& b) {
+              return a->getFileSize() < b->getFileSize();
+          });
+
     for (auto index : in_index) {
         size_t num_input_elements = interpreter->tensor(index)->bytes;
-
-        auto input = s.input_file.begin();
-        for (; input != s.input_file.end(); input++) {
-            if (input->get()->getFileSize() == num_input_elements) {
-                memcpy(reinterpret_cast<char*>(interpreter->typed_tensor<Type>(index)), input->get()->getAddr(), num_input_elements);
-                break;
-            }
-        }
-        if (input == s.input_file.end()) {
+    
+        auto it = std::lower_bound(s.input_file.begin(), s.input_file.end(),
+                                   num_input_elements,
+                                   [](const RawImagePtr& a, size_t size) {
+                                       return a->getFileSize() < size;
+                                   });
+    
+        if (it == s.input_file.end() || (*it)->getFileSize() != num_input_elements) {
             std::stringstream ss_input;
             ss_input << "input file is wrong, expected file size is ";
             for (auto index : in_index) {
-                size_t num_input_elements = interpreter->tensor(index)->bytes;
-                ss_input << num_input_elements << ",";
+                ss_input << interpreter->tensor(index)->bytes << ",";
             }
             LOGE("%s\n", ss_input.str().c_str());
 
             std::stringstream ss_current;
             ss_current << "current file size is ";
             for (const auto& inputPtr : s.input_file) {
-                size_t inputSize = inputPtr->getFileSize();
-                ss_current << inputSize << ",";
+                ss_current << inputPtr->getFileSize() << ",";
             }
             LOGE("%s\n", ss_current.str().c_str());
-
             return -1;
         }
+    
+        memcpy(reinterpret_cast<char*>(interpreter->typed_tensor<Type>(index)), (*it)->getAddr(), num_input_elements);
     }
-#if 0
-    for (auto index : in_index) {
-        std::ofstream file("/data/lihc/test/in.raw", std::ios::binary);
-        if (file.is_open()) {
-            file.write(reinterpret_cast<const char*>(interpreter->typed_tensor<float>(index)), interpreter->tensor(index)->bytes);
+    
+
+
+    // Debug
+    if (DEBUG) {
+        for (auto index : in_index) {
+            std::ofstream file("/data/lihc/test/in.raw", std::ios::binary);
+            if (file.is_open()) {
+                file.write(reinterpret_cast<char*>(interpreter->typed_tensor<float>(index)), interpreter->tensor(index)->bytes);
+            }
+            file.close();
         }
-        file.close();
     }
-#endif
     
     {
         ptime p("invoke");
@@ -99,8 +107,11 @@ int TfliteNetRun::model_inference() {
     }
 
     // Read output buffers
+    int n = 1;
     for (auto index : out_index) {
         size_t num_output_elements = interpreter->tensor(index)->bytes;
+#if 0
+        // Write the output to Settings
         std::unique_ptr<RawImage> rawImagePtr(new RawImage);
         rawImagePtr->allocBuffer(num_output_elements);
         
@@ -108,6 +119,21 @@ int TfliteNetRun::model_inference() {
         
         memcpy(rawImagePtr->getAddr(), reinterpret_cast<char*>(output), num_output_elements);
         s.output_file.push_back(std::move(rawImagePtr));
+#else
+        std::string output_name = s.output_path + "/" + s.outputName + std::to_string(n) + ".raw"; 
+        std::ofstream outfile(output_name, std::ios::binary);
+
+        if (outfile.is_open()) {
+            outfile.write(reinterpret_cast<char*>(interpreter->typed_tensor<Type>(index)), num_output_elements);
+
+            outfile.close();
+            LOGD("output write success\n");
+        } else {
+            LOGD("cannot write output\n");
+            return -1;
+        }
+        ++n;
+#endif
     }
 
     return 0;

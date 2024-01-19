@@ -41,7 +41,7 @@ int TfliteNetRun::model_init(const char* model_file) {
         }
 
         if (!createDelegate()) {
-            LOGE("Error modifyed delegate, fall back to CPU\n");
+            LOGD("no delegate, use CPU\n");
         }
 
         if (!modify_delegate) {
@@ -69,18 +69,4 @@ int TfliteNetRun::model_init(const char* model_file) {
 int TfliteNetRun::model_deinit() {
     ptime p("model deinit");
     return 0;
-}
-
-void TfliteNetRun::PrintProfilingInfo(const profiling::ProfileEvent* e,
-                        uint32_t subgraph_index, uint32_t op_index,
-                        TfLiteRegistration registration) {
-
-  std::cout << std::fixed << std::setw(10) << std::setprecision(3)
-            << (e->end_timestamp_us - e->begin_timestamp_us) / 1000.0
-            << ", Subgraph " << std::setw(3) << std::setprecision(3)
-            << subgraph_index << ", Node " << std::setw(3)
-            << std::setprecision(3) << op_index << ", OpCode " << std::setw(3)
-            << std::setprecision(3) << registration.builtin_code << ", "
-            << EnumNameBuiltinOperator(
-                   static_cast<BuiltinOperator>(registration.builtin_code)) << std::endl;
 }
