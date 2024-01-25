@@ -70,6 +70,7 @@ int TfliteNetRun::model_inference() {
                 ss_input << interpreter->tensor(index)->bytes << ",";
             }
             LOGE("%s\n", ss_input.str().c_str());
+            Logger::log("{}", ss_input.str());
 
             std::stringstream ss_current;
             ss_current << "current file size is ";
@@ -77,10 +78,13 @@ int TfliteNetRun::model_inference() {
                 ss_current << inputPtr->getFileSize() << ",";
             }
             LOGE("%s\n", ss_current.str().c_str());
+            Logger::log("{}", ss_current.str());
             return -1;
         }
     
-        memcpy(reinterpret_cast<char*>(interpreter->typed_tensor<Type>(index)), (*it)->getAddr(), num_input_elements);
+        memcpy(reinterpret_cast<char*>(interpreter->typed_tensor<Type>(index)), 
+                                      (*it)->getAddr(), 
+                                      num_input_elements);
     }
     
 
@@ -90,7 +94,8 @@ int TfliteNetRun::model_inference() {
         for (auto index : in_index) {
             std::ofstream file("/data/lihc/test/in.raw", std::ios::binary);
             if (file.is_open()) {
-                file.write(reinterpret_cast<char*>(interpreter->typed_tensor<float>(index)), interpreter->tensor(index)->bytes);
+                file.write(reinterpret_cast<char*>(interpreter->typed_tensor<float>(index)), 
+                                                   interpreter->tensor(index)->bytes);
             }
             file.close();
         }
@@ -102,6 +107,7 @@ int TfliteNetRun::model_inference() {
         if(interpreter->Invoke() != kTfLiteOk)
         {
             LOGE("Error Invoke\n");
+            Logger::log("Error Invoke");
             return -1;
         }
     }

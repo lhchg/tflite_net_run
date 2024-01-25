@@ -12,6 +12,7 @@ class ptime
     using clock_t = std::chrono::high_resolution_clock;
     using second_t = std::chrono::duration<double, std::ratio<1> >;
     using milli = std::chrono::milliseconds;
+    using micros = std::chrono::microseconds;
     std::chrono::time_point<clock_t> m_beg;
     std::string m_func_name;
 public:
@@ -28,7 +29,10 @@ public:
     }
     ~ptime()
     {
-        LOGD("elasp time(ms):%lld,   test func:%s\n", std::chrono::duration_cast<milli>(clock_t::now() - m_beg).count(), m_func_name.c_str());
+        
+        Settings& s = *Settings::get();
+        LOGD("elasp time(us):%lld,   test func:%s\n", std::chrono::duration_cast<micros>(clock_t::now() - m_beg).count(), m_func_name.c_str());
+        Logger::log("elasp time(us):{},   test func:{}",std::chrono::duration_cast<micros>(clock_t::now() - m_beg).count(), m_func_name.c_str());
     }
 
 };
