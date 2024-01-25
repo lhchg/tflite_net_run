@@ -8,7 +8,9 @@
 
 class RawImage {
 public:
-    RawImage(): imageName(""), addr(nullptr), fileSize(0){};
+    RawImage(): RawImage("", 0){};
+    RawImage(std::string name): RawImage(name, 0){};
+    RawImage(std::string name, size_t size): imageName(name), fileSize(size), addr(nullptr){};
 
     void allocBuffer(size_t size) {
         addr = new char[size];
@@ -34,6 +36,20 @@ public:
     bool saveImage(std::string fileName) {
         if (addr != nullptr && fileSize != 0) { 
             std::ofstream outfile(fileName, std::ios::binary);
+            if (outfile.is_open()) {
+                outfile.write(addr, fileSize);
+                outfile.close();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    bool saveImage() {
+        if (addr != nullptr && fileSize != 0) { 
+            std::ofstream outfile(imageName, std::ios::binary);
             if (outfile.is_open()) {
                 outfile.write(addr, fileSize);
                 outfile.close();
