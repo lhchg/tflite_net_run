@@ -6,11 +6,9 @@ bool TfliteNetRun::createDelegate() {
     for (auto& delegate : delegates) {
         const auto delegate_name = delegate.provider->GetName();
         if (interpreter->ModifyGraphWithDelegate(std::move(delegate.delegate)) != kTfLiteOk) {
-            LOGE("Failed to apply %s delegate.\n", delegate_name.c_str());
-            Logger::log("Failed to apply {} delegate.", delegate_name);
+            Logger::log("Error: Failed to apply {} delegate.", delegate_name);
             modify_delegate = false;
         } else {
-            LOGD("Applied %s delegate.\n", delegate_name.c_str());
             Logger::log("Applied {} delegate.", delegate_name);
             modify_delegate = true;
         }
@@ -30,8 +28,7 @@ int TfliteNetRun::model_init(const char* model_file) {
             tflite::FlatBufferModel::BuildFromFile(model_file);
         if(model == nullptr)
         {
-            LOGE("Error open model\n");
-            Logger::log("Error open model");
+            Logger::log("Error: Error open model");
             return -1;
         }
         static tflite::ops::builtin::BuiltinOpResolver resolver;
@@ -40,13 +37,11 @@ int TfliteNetRun::model_init(const char* model_file) {
         builder(&interpreter);
         if(interpreter == nullptr)
         {
-            LOGE("Error get interpreter\n");
-            Logger::log("Error get interpreter");
+            Logger::log("Error: Error get interpreter");
             return -1;
         }
 
         if (!createDelegate()) {
-            LOGD("no delegate, use CPU\n");
             Logger::log("no delegate, use CPU");
         }
 
@@ -54,7 +49,7 @@ int TfliteNetRun::model_init(const char* model_file) {
             // Allocate tensor buffers.
             if(interpreter->AllocateTensors() != kTfLiteOk)
             {
-                LOGE("Error AllocateTensors\n");
+                Logger::log("Error: no delegate, use CPU");
                 return -1;
             }
         }
@@ -66,9 +61,7 @@ int TfliteNetRun::model_init(const char* model_file) {
     in_index = interpreter->inputs();
     out_index = interpreter->outputs();
 
-    LOGD("number of input is %lu\n", interpreter->inputs().size());
     Logger::log("number of input is {}", interpreter->inputs().size());
-    LOGD("number of output is %lu\n", interpreter->outputs().size());
     Logger::log("number of output is {}", interpreter->outputs().size());
 
     return 0;

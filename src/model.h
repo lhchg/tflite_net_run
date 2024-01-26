@@ -65,19 +65,17 @@ int TfliteNetRun::model_inference() {
     
         if (it == s.input_file.end() || (*it)->getFileSize() != num_input_elements) {
             std::stringstream ss_input;
-            ss_input << "input file is wrong, expected file size is ";
+            ss_input << "Error: input file is wrong, expected file size is ";
             for (auto index : in_index) {
                 ss_input << interpreter->tensor(index)->bytes << ",";
             }
-            LOGE("%s\n", ss_input.str().c_str());
             Logger::log("{}", ss_input.str());
 
             std::stringstream ss_current;
-            ss_current << "current file size is ";
+            ss_current << "Error: current file size is ";
             for (const auto& inputPtr : s.input_file) {
                 ss_current << inputPtr->getFileSize() << ",";
             }
-            LOGE("%s\n", ss_current.str().c_str());
             Logger::log("{}", ss_current.str());
             return -1;
         }
@@ -106,8 +104,7 @@ int TfliteNetRun::model_inference() {
         // Run inference
         if(interpreter->Invoke() != kTfLiteOk)
         {
-            LOGE("Error Invoke\n");
-            Logger::log("Error Invoke");
+            Logger::log("Error: Error Invoke");
             return -1;
         }
     }
@@ -133,9 +130,7 @@ int TfliteNetRun::model_inference() {
             outfile.write(reinterpret_cast<char*>(interpreter->typed_tensor<Type>(index)), num_output_elements);
 
             outfile.close();
-            LOGD("output write success\n");
         } else {
-            LOGD("cannot write output\n");
             return -1;
         }
         ++n;

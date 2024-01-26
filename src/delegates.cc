@@ -16,8 +16,7 @@ void DelegateProviders::MergeSettingsIntoParams() {
     Settings& s = *Settings::get();
     if (s.gpu_delegate) {
         if (!params_.HasParam("use_gpu")) {
-            LOGE("GPU delegate execution provider isn't linked or GPU delegate isn't supported on the platform\n");
-            Logger::log("GPU delegate execution provider isn't linked or GPU delegate isn't supported on the platform");
+            Logger::log("Error: GPU delegate execution provider isn't linked or GPU delegate isn't supported on the platform");
         } else {
             params_.Set<bool>("use_gpu", true);
             if (params_.HasParam("gpu_inference_for_sustained_speed")) {
@@ -34,8 +33,7 @@ void DelegateProviders::MergeSettingsIntoParams() {
 
     if (s.nnapi_delegate) {
         if (!params_.HasParam("use_nnapi")) {
-            LOGE("NNAPI delegate execution provider isn't linked or NNAPI delegate isn't supported on the platform!\n");
-            Logger::log("NNAPI delegate execution provider isn't linked or NNAPI delegate isn't supported on the platform!");
+            Logger::log("Error: NNAPI delegate execution provider isn't linked or NNAPI delegate isn't supported on the platform!");
         } else {
             params_.Set<bool>("use_nnapi", true);
             params_.Set<std::string>("nnapi_execution_preference", "fast_single_answer");
@@ -49,8 +47,7 @@ void DelegateProviders::MergeSettingsIntoParams() {
 
     if (s.hexagon_delegate) {
         if (!params_.HasParam("use_hexagon")) {
-            LOGE("Hexagon delegate execution provider isn't linked or Hexagon delegate isn't supported on the platform!\n");
-            Logger::log("Hexagon delegate execution provider isn't linked or Hexagon delegate isn't supported on the platform!");
+            Logger::log("Error: Hexagon delegate execution provider isn't linked or Hexagon delegate isn't supported on the platform!");
         } else {
             params_.Set<bool>("use_hexagon", true);
             params_.Set<bool>("hexagon_profiling", s.profiling);
@@ -59,8 +56,7 @@ void DelegateProviders::MergeSettingsIntoParams() {
 
     if (s.xnnpack_delegate) {
         if (!params_.HasParam("use_xnnpack")) {
-            LOGE("XNNPACK delegate execution provider isn't linked or XNNPACK delegate isn't supported on the platform!\n");
-            Logger::log("XNNPACK delegate execution provider isn't linked or XNNPACK delegate isn't supported on the platform!");
+            Logger::log("Error: XNNPACK delegate execution provider isn't linked or XNNPACK delegate isn't supported on the platform!");
         } else {
             params_.Set<bool>("use_xnnpack", true);
             params_.Set<int32_t>("num_threads", s.number_of_threads);
@@ -71,37 +67,29 @@ void DelegateProviders::MergeSettingsIntoParams() {
 void DelegateProviders::check() {
     Settings& s = *Settings::get();
     if (params_.HasParam("use_gpu")) {
-        LOGD("gpu delegate is supported on the platform\n");
         Logger::log("gpu delegate is supported on the platform");
     } else {
-        LOGD("gpu delegate is not supported on the platform\n");
         Logger::log("gpu delegate is not supported on the platform");
         
     }
 
     if (params_.HasParam("use_nnapi")) {
-        LOGD("nnapi delegate is supported on the platform\n");
         Logger::log("nnapi delegate is supported on the platform");
     } else {
-        LOGD("nnapi delegate is not supported on the platform\n");
         Logger::log("nnapi delegate is not supported on the platform");
         
     }
 
     if (params_.HasParam("use_xnnpack")) {
-        LOGD("xnnpack delegate is supported on the platform\n");
         Logger::log("xnnpack delegate is supported on the platform");
     } else {
-        LOGD("xnnpack delegate is not supported on the platform\n");
         Logger::log("xnnpack delegate is not supported on the platform");
         
     }
 
     if (params_.HasParam("use_hexagon")) {
-        LOGD("hexagon delegate is supported on the platform\n");
         Logger::log("hexagon delegate is supported on the platform");
     } else {
-        LOGD("hexagon delegate is not supported on the platform\n");
         Logger::log("hexagon delegate is not supported on the platform");
     }
 }

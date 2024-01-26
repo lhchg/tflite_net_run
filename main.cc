@@ -16,10 +16,8 @@ void saveOutput() {
     for (const auto& output : s.output_file) {
         std::string output_name = s.output_path + "/" + s.outputName + std::to_string(n) + ".raw"; 
         if (output->saveImage(output_name)) {
-            LOGD("file saved:%s\n", output_name.c_str());
             Logger::log("file saved:{}", output_name);
         } else {
-            LOGD("cannot write output:%s\n", output_name.c_str());
             Logger::log("cannot write output:{}", output_name);
         }
         ++n;
@@ -44,13 +42,11 @@ char* readImg(const std::string& filename, size_t& file_size) {
         file_size = fileSize;
 
         file.close();
-        LOGD("fileSize= %lu\n", file_size);
         Logger::log("fileSize:{}", file_size);
 
         return buffer;
     } else {
-        LOGE("input file (%s) open failed.\n", filename.c_str());
-        Logger::log("input file {} open failed.", filename);
+        Logger::log("Error: input file {} open failed.", filename);
         file_size = 0;
         return nullptr;
     }
@@ -132,36 +128,28 @@ void getInputFlag(int argc, char** argv) {
         switch (c) {
             case 'm':
                 s.model_name = optarg;
-                LOGD("model name is %s\n", s.model_name.c_str());
                 break;
             case 'i':
                 inputFiles = optarg;
                 parseFileNames(inputFiles);
-                LOGD("input file number is %lu\n", s.input_file.size());
                 break;
             case 'o':
                 s.output_path = optarg;
-                LOGD("output file is %s\n", s.output_path.c_str());
                 break;
             case 'g':
                 s.gpu_delegate = strtol(optarg, nullptr, 10);
-                LOGD("use gpu delegate %d\n", s.gpu_delegate);
                 break;
             case 'n':
                 s.nnapi_delegate = strtol(optarg, nullptr, 10);
-                LOGD("use NNAPI delegate %d\n", s.nnapi_delegate);
                 break;
             case 'f':
                 s.allow_fp16 = strtol(optarg, nullptr, 10);
-                LOGD("allow fp16 %d\n", s.allow_fp16);
                 break;
             case 'q':
                 s.gpu_enable_quant = strtol(optarg, nullptr, 10);
-                LOGD("gpu_enable_quant %d\n", s.gpu_enable_quant);
                 break;
             case 's':
                 s.gpu_sustained_speed = strtol(optarg, nullptr, 10);
-                LOGD("gpu_sustained_speed %d\n", s.gpu_sustained_speed);
                 break;
             case 'h':
             case '?':
