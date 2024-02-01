@@ -13,8 +13,9 @@
 #include "tensorflow/lite/profiling/profiler.h"
 
 #include "../include/settings.h"
-#include "delegates.h"
 #include "../utils/ptime.h"
+#include "../utils/singleton.h"
+#include "delegates.h"
 
 static int DEBUG = 0;
 
@@ -69,14 +70,14 @@ int TfliteNetRun::model_inference() {
             for (auto index : in_index) {
                 ss_input << interpreter->tensor(index)->bytes << ",";
             }
-            Logger::log("{}", ss_input.str());
+            LOG("{}", ss_input.str());
 
             std::stringstream ss_current;
             ss_current << "Error: current file size is ";
             for (const auto& inputPtr : s.input_file) {
                 ss_current << inputPtr->getFileSize() << ",";
             }
-            Logger::log("{}", ss_current.str());
+            LOG("{}", ss_current.str());
             return -1;
         }
     
@@ -104,7 +105,7 @@ int TfliteNetRun::model_inference() {
         // Run inference
         if(interpreter->Invoke() != kTfLiteOk)
         {
-            Logger::log("Error: Error Invoke");
+            LOG("Error: Error Invoke");
             return -1;
         }
     }

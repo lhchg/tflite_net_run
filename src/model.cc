@@ -6,10 +6,10 @@ bool TfliteNetRun::createDelegate() {
     for (auto& delegate : delegates) {
         const auto delegate_name = delegate.provider->GetName();
         if (interpreter->ModifyGraphWithDelegate(std::move(delegate.delegate)) != kTfLiteOk) {
-            Logger::log("Error: Failed to apply {} delegate.", delegate_name);
+            LOG("Error: Failed to apply {} delegate.", delegate_name);
             modify_delegate = false;
         } else {
-            Logger::log("Applied {} delegate.", delegate_name);
+            LOG("Applied {} delegate.", delegate_name);
             modify_delegate = true;
         }
     }
@@ -28,7 +28,7 @@ int TfliteNetRun::model_init(const char* model_file) {
             tflite::FlatBufferModel::BuildFromFile(model_file);
         if(model == nullptr)
         {
-            Logger::log("Error: Error open model");
+            LOG("Error: Error open model");
             return -1;
         }
         static tflite::ops::builtin::BuiltinOpResolver resolver;
@@ -37,19 +37,19 @@ int TfliteNetRun::model_init(const char* model_file) {
         builder(&interpreter);
         if(interpreter == nullptr)
         {
-            Logger::log("Error: Error get interpreter");
+            LOG("Error: Error get interpreter");
             return -1;
         }
 
         if (!createDelegate()) {
-            Logger::log("no delegate, use CPU");
+            LOG("no delegate, use CPU");
         }
 
         if (!modify_delegate) {
             // Allocate tensor buffers.
             if(interpreter->AllocateTensors() != kTfLiteOk)
             {
-                Logger::log("Error: no delegate, use CPU");
+                LOG("Error: no delegate, use CPU");
                 return -1;
             }
         }
@@ -61,8 +61,8 @@ int TfliteNetRun::model_init(const char* model_file) {
     in_index = interpreter->inputs();
     out_index = interpreter->outputs();
 
-    Logger::log("number of input is {}", interpreter->inputs().size());
-    Logger::log("number of output is {}", interpreter->outputs().size());
+    LOG("number of input is {}", interpreter->inputs().size());
+    LOG("number of output is {}", interpreter->outputs().size());
 
     return 0;
 }

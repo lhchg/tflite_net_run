@@ -16,9 +16,9 @@ void saveOutput() {
     for (const auto& output : s.output_file) {
         std::string output_name = s.output_path + "/" + s.outputName + std::to_string(n) + ".raw"; 
         if (output->saveImage(output_name)) {
-            Logger::log("file saved:{}", output_name);
+            LOG("file saved:{}", output_name);
         } else {
-            Logger::log("cannot write output:{}", output_name);
+            LOG("cannot write output:{}", output_name);
         }
         ++n;
     }
@@ -42,11 +42,11 @@ char* readImg(const std::string& filename, size_t& file_size) {
         file_size = fileSize;
 
         file.close();
-        Logger::log("fileSize:{}", file_size);
+        //LOG("fileSize:{}", file_size);
 
         return buffer;
     } else {
-        Logger::log("Error: input file {} open failed.", filename);
+        //LOG("Error: input file {} open failed.", filename);
         file_size = 0;
         return nullptr;
     }
@@ -161,8 +161,6 @@ void getInputFlag(int argc, char** argv) {
     }
 }
 
-std::string Logger::filename;
-
 int main(int argc, char **argv) {
     if (argc == 1) {
         display_usage();
@@ -173,7 +171,8 @@ int main(int argc, char **argv) {
 
     std::string filename = s.output_path + FILE_NAME;
     std::remove(filename.c_str());
-    Logger::filename = s.output_path + FILE_NAME; 
+    INIT_LOG_FILE(s.output_path + FILE_NAME)
+
     TfliteNetRun tfliterun;
 
     std::string model_file = s.model_name;

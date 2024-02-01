@@ -31,7 +31,7 @@ public:
     {
         
         Settings& s = *Settings::get();
-        Logger::log("elasp time(us):{},   test func:{}",std::chrono::duration_cast<micros>(clock_t::now() - m_beg).count(), m_func_name.c_str());
+        LOG("elasp time(us):{},   test func:{}",std::chrono::duration_cast<micros>(clock_t::now() - m_beg).count(), m_func_name.c_str());
     }
 
 };

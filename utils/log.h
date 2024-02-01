@@ -1,59 +1,14 @@
 #pragma once
-#include <android/log.h>
-#include <ctime>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <stdexcept>
-#include <string>
-#include <sstream>
+#include "log_opt.h"
 
-#include "../include/settings.h"
-
-namespace fs = std::filesystem;
-
-#define LOG_TAG "TFLiteNetRun"
 #define FILE_NAME "TFLite.log"
 
+#define INIT_LOG_FILE(filename)\
+{\
+    Logger::getInstance(filename, 20);\
+}
 
-//#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
-//#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
-
-#define LOGD(...) printf(__VA_ARGS__)
-#define LOGE(...) printf(__VA_ARGS__)
-
-class Logger {
-public:
-    static void log(const std::string& message) {
-        static std::ofstream logFile;
-        fs::path filePath = filename;
-        try {
-            if (!logFile.is_open()) {
-                logFile.open(filePath, std::ios::app);
-                if (!logFile) {
-                    throw std::runtime_error("Failed to open log file: " + filename);
-                }
-            }
-
-            std::time_t currentTime = std::time(nullptr);
-            char timestamp[80];
-            std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
-
-            logFile << "[" << timestamp << "] " << message << std::endl;
-            LOGD("%s:%s\n", timestamp, message.c_str());
-        } catch (const std::exception& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
-        }
-    }
-
-    template<typename T, typename... Args>
-    static void log(const std::string& format, T value, Args... args) {
-        std::ostringstream oss;
-        oss << value;
-        std::string newFormat = format;
-        newFormat.replace(newFormat.find("{}"), 2, oss.str());
-        log(newFormat, args...);
-    }
-
-    static std::string filename;
-};
+#define LOG(...)\
+{\
+    Logger::getInstance()->write(__VA_ARGS__);\
+}
